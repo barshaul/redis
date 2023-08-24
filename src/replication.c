@@ -2268,7 +2268,7 @@ void readSyncBulkPayload(connection *conn) {
      * offset of the master. The secondary ID / offset are cleared since
      * we are starting a new history. */
     memcpy(server.replid,server.master->replid,sizeof(server.replid));
-    server.master_repl_offset = server.master->reploff;
+    // server.master_repl_offset = server.master->reploff;
     clearReplicationId2();
 
     /* Let's create the replication backlog if needed. Slaves need to

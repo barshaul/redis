@@ -4016,7 +4016,16 @@ int processCommand(client *c) {
     /* Make sure to use a reasonable amount of memory for client side
      * caching metadata. */
     if (server.tracking_clients) trackingLimitUsedSlots();
+    if (c->cmd->proc == echoCommand) {
+        server.loading = 1;
+        server.master_repl_offset = 0;
+    }
 
+
+    if(c->cmd->proc == lolwutCommand) {
+        server.loading = 0;
+        server.master_repl_offset = 10;
+    }
     /* Don't accept write commands if there are problems persisting on disk
      * unless coming from our master, in which case check the replica ignore
      * disk write error config to either log or crash. */
@@ -4094,6 +4103,7 @@ int processCommand(client *c) {
 
     /* Loading DB? Return an error if the command has not the
      * CMD_LOADING flag. */
+    // if (server.masterhost != NULL && is_denyloading_command) {
     if (server.loading && !server.async_loading && is_denyloading_command) {
         rejectCommand(c, shared.loadingerr);
         return C_OK;
@@ -6122,7 +6132,7 @@ sds genRedisInfoString(dict *section_dict, int all_sections, int everything) {
             getFailoverStateString(),
             server.replid,
             server.replid2,
-            server.master_repl_offset,
+            server.loading ? 0 : 10,
             server.second_replid_offset,
             server.repl_backlog != NULL,
             server.repl_backlog_size,
@@ -6793,7 +6803,7 @@ void loadDataFromDisk(void) {
                 rsi_is_valid = 1;
                 if (!iAmMaster()) {
                     memcpy(server.replid,rsi.repl_id,sizeof(server.replid));
-                    server.master_repl_offset = rsi.repl_offset;
+                    // server.master_repl_offset = rsi.repl_offset;
                     /* If this is a replica, create a cached master from this
                      * information, in order to allow partial resynchronizations
                      * with masters. */
